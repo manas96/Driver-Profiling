@@ -13,4 +13,6 @@ Modifying game code to log input events for driver profiling and sentiment analy
 
 -Added car name.
 
+-Added lap counter.
+
 
