@@ -15,4 +15,6 @@ Modifying game code to log input events for driver profiling and sentiment analy
 
 -Added lap counter.
 
+-LogReader.py processes logfile and creates appropriate data structures for each log.
 
+-ml.py , compare.py used to view data.
