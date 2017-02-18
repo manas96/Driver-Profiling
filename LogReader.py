@@ -13,17 +13,16 @@ class LogReader:
 		self.rawFeatures=[]	#format: [keyName,keyState,time]
 		self.laps=[]		#format: [lapnumber,time]					
 		self.perLap=[]		#format: [[lap1 rawFeatures],[lap2 rawFeatures]]
-		self.totalKeyPressTimesTimes=[0,0,0,0,0,0,0]	#format: [0,up,left,right,down,ctrl,space]
+		self.totalKeyPressTimes=[0,0,0,0,0,0,0]	#format: [0,up,left,right,down,ctrl,space]
 		self.perLapKeyData=[]  	#format: [lapnumber,keyTimes,timesPressed]
 		self.timesPressed=[0,0,0,0,0,0,0] #format: [0,up,left,right,down,ctrl,space]
 
 		
 		self.keyPressesPerLap=[] #format:[[],lap1[keyPresses],lap2[keyPresses]]
-
+		self.lapStartTimes=[]		#store time when lap started[l1Time,l2Time..]
 		self.firstPress=0				#to store first key press time to calculate first lap time
 
 		self.read()
-		self.calcLapTimes()
 		self.findKeyPresses()
 	def read(self):
 		
@@ -41,6 +40,7 @@ class LogReader:
 				continue			#skip over log generation date and car name lines
 
 			if 'lap ' in record[0]:
+				self.lapStartTimes.append(self.convertTime(record[1]))
 				lapInfo=record[0].split(' ')
 				del lapInfo[0]
 				lapInfo.append(tmp)			#store [lapNo,[rawFeatures]]
@@ -67,6 +67,7 @@ class LogReader:
 			if flag==True:
 				flag=False;
 				self.firstPress=record[2]
+				self.lapStartTimes.append(self.firstPress)
 
 				#to calculate total times a key was presssed:
 			keyCode=record[0]
@@ -75,14 +76,14 @@ class LogReader:
 			if keyState==0:		#key pressed
 				keyStack[keyCode]=keyTimestamp
 			elif keyState==1:		#key released
-				self.totalKeyPressTimesTimes[keyCode]+=(keyTimestamp-keyStack[keyCode])
+				self.totalKeyPressTimes[keyCode]+=(keyTimestamp-keyStack[keyCode])
 				self.timesPressed[keyCode]+=1
 
-
+		self.calcLapTimes()			#to find time elapsed for each lap
 		#print self.rawFeatures
 		#print self.laps
 		#print self.perLap
-		#print self.totalKeyPressTimesTimes
+		#print self.totalKeyPressTimes
 		#print self.timesPressed
 		#print self.firstPress
 		
@@ -237,13 +238,14 @@ class LogReader:
 
 	def printData(self):
 
-		print "Key 'UP' was pressed ",self.timesPressed[1]," times. Pressed for ",self.totalKeyPressTimesTimes[1]," seconds."
-		print "Key 'LEFT' was pressed ",self.timesPressed[2]," times. Pressed for ",self.totalKeyPressTimesTimes[2]," seconds."
-		print "Key 'RIGHT' was pressed ",self.timesPressed[3]," times. Pressed for ",self.totalKeyPressTimesTimes[3]," seconds."
-		print "Key 'DOWN' was pressed ",self.timesPressed[4]," times. Pressed for ",self.totalKeyPressTimesTimes[4]," seconds."
-		print "Key 'CTRL' was pressed ",self.timesPressed[5]," times. Pressed for ",self.totalKeyPressTimesTimes[5]," seconds."
-		print "Key 'SPACE' was pressed ",self.timesPressed[6]," times. Pressed for ",self.totalKeyPressTimesTimes[6]," seconds."
-
+		print '------------------------------------------------------------------------------------------'
+		print "Key 'UP' was pressed ",self.timesPressed[1]," times. Pressed for ",self.totalKeyPressTimes[1]," seconds."
+		print "Key 'LEFT' was pressed ",self.timesPressed[2]," times. Pressed for ",self.totalKeyPressTimes[2]," seconds."
+		print "Key 'RIGHT' was pressed ",self.timesPressed[3]," times. Pressed for ",self.totalKeyPressTimes[3]," seconds."
+		print "Key 'DOWN' was pressed ",self.timesPressed[4]," times. Pressed for ",self.totalKeyPressTimes[4]," seconds."
+		print "Key 'CTRL' was pressed ",self.timesPressed[5]," times. Pressed for ",self.totalKeyPressTimes[5]," seconds."
+		print "Key 'SPACE' was pressed ",self.timesPressed[6]," times. Pressed for ",self.totalKeyPressTimes[6]," seconds."
+		print '------------------------------------------------------------------------------------------'
 		for i in self.laps:
 			print "Lap ",i[0]," lasted for ",i[1]," seconds."
 
@@ -256,17 +258,18 @@ class LogReader:
 			print "Key 'CTRL' was pressed ",i[2][5],"times. Pressed for ",i[1][5]," seconds."
 			print "Key 'SPACE' was pressed ",i[2][6],"times. Pressed for ",i[1][6]," seconds."
 
-
-		''' raw data printing
+		
+		# raw data printing
+		print '****************************************PRINTING FIRST DERIVATION**************************************'
 		for x in self.keyPressesPerLap:
-			print "-------------LAP ",x[0],'------------------------'
-			print 'up ',len(x[1][1]),x[1][1]
-			print 'left ',len(x[1][2]),x[1][2]
-			print 'right ',len(x[1][3]),x[1][3]
-			print 'down ',len(x[1][4]),x[1][4]
-			print 'ctrl ',len(x[1][5]),x[1][5]
-			print 'space ',len(x[1][6]),x[1][6]
-		'''
+			print "--------------------LAP ",x[0],'------------------------'
+			print 'UP-----------> ',x[1][1],'\nLENGTH:',len(x[1][1])
+			print 'LEFT-----------> ',x[1][2],'\nLENGTH:',len(x[1][2])
+			print 'RIGHT-----------> ',x[1][3],'\nLENGTH:',len(x[1][3])
+			print 'DOWN-----------> ',x[1][4],'\nLENGTH:',len(x[1][4])
+			print 'CTRL-----------> ',x[1][5],'\nLENGTH:',len(x[1][5])
+			print 'SPACE-----------> ',x[1][6],'\nLENGTH:',len(x[1][6])
+				
 		
 
 
