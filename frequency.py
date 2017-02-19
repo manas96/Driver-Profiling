@@ -2,7 +2,10 @@ import matplotlib.pyplot as plt
 from LogReader import LogReader
 import math
 import numpy as np
+from sklearn import svm
+from sklearn import linear_model
 
+keys=[1,2,3,4,5,6]
 up=1
 left=2
 right=3
@@ -34,6 +37,7 @@ class Frequency:
 			self.space.append(s)
 			counter+=1
 		self.keyArray=[0,self.up,self.left,self.right,self.down,self.ctrl,self.space]
+		
 
 	#find number of seconds taken for the longest lap
 	def longestLap(self,data):
@@ -129,13 +133,70 @@ def plot(data,key):
 		plt.plot(data.x,data.keyArray[key][i],label=lap)
 	plt.legend(loc='upper left')
 
+def getKeyFeatureVectors(data,label,key,exclude=-1):
+	features=[]
+	labels=[]
+	for i in range(0,data.laps):
+
+		if i==exclude:
+			continue
+		for j in range(0,len(data.x)):
+			features.append([data.x[j],data.keyArray[key][i][j]])
+			labels.append(label)
+	return features,labels
+
+def getAllFeatureVectors(data,label,exclude=-1):
+	features=[]
+	labels=[]
+	for i in keys:
+		f,l=getKeyFeatureVectors(data,label,i,exclude)
+		features+=f
+		labels+=l
+	return features,labels
+
+
+
 
 manas=Frequency('manasLog.txt','Manas')
 khalid=Frequency('khalidLog.txt','Khalid')
 bhoomi=Frequency('bhoomiLog.txt','Bhoomi')
-plot(manas,right)
-plot(bhoomi,right)
+
+manasTest=Frequency('manasTest.txt','Manas test')
+
+#plot(manas,right)
 plot(manas,left)
+#plot(bhoomi,right)
 plot(khalid,left)
 
-plt.show()
+clf=svm.SVC()
+lm=linear_model.LinearRegression()
+
+features=[]
+labels=[]
+
+f,l=getAllFeatureVectors(manas,0)
+features+=f
+labels+=l
+
+f,l=getAllFeatureVectors(khalid,1)
+features+=f
+labels+=l
+
+f,l=getAllFeatureVectors(manasTest,0)
+features+=f
+labels+=l
+
+clf.fit(features,labels)
+lm.fit(features,labels)
+
+
+p=clf.predict(f)
+c=0
+for i in p:
+	if i==1:
+		c+=1
+acc=c/float(len(p))
+print acc
+print np.mean(lm.predict(f))
+
+#plt.show()
